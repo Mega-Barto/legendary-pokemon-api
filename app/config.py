@@ -1,6 +1,7 @@
 import os
 
 basedir = os.path.abspath(os.path.dirname(__file__))
+instance_path = os.path.abspath(os.path.join(basedir, "..", "instance"))
 
 
 class Config:
@@ -9,7 +10,7 @@ class Config:
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_DATABASE_URI = os.environ.get(
         "DATABASE_URL",
-        "sqlite:///" + os.path.join(basedir, "..", "instance", "app.sqlite")
+        "sqlite:///" + os.path.join(instance_path, "app.sqlite")
     )
     WELCOME_MESSAGE = "<p>legendary api</p>"
 
@@ -21,7 +22,7 @@ class DevelopmentConfig(Config):
 
     SQLALCHEMY_DATABASE_URI = os.environ.get(
         "DATABASE_URL",
-        "sqlite:///" + os.path.join(basedir, "..", "instance", "dev.sqlite")
+        "sqlite:///" + os.path.join(instance_path, "dev.sqlite")
     )
 
 
