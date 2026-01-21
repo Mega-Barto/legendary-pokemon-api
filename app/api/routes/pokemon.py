@@ -50,6 +50,14 @@ def get_pokemon_by_name(name: str):
     pokemon = Pokemon.query.filter_by(name=name).first_or_404()
     return jsonify(serialize_pokemon(pokemon))
 
+@bp.route("/pokemon/random", methods=["GET"])
+def get_random_pokemon():
+    """Get a random Pokémon."""
+    pokemon = Pokemon.query.order_by(db.func.random()).first()
+    if not pokemon:
+        return jsonify({"error": "No pokemon found"}), 404
+    return jsonify(serialize_pokemon(pokemon))
+
 @bp.route("/pokemon/type/<string:type_name>", methods=["GET"])
 def get_pokemon_by_type(type_name: str):
     """Get all Pokémon by type name."""
