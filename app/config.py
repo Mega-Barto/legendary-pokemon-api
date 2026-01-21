@@ -1,38 +1,35 @@
 import os
 
-basedir = os.path.abspath(os.path.dirname(__file__))
-instance_path = os.path.abspath(os.path.join(basedir, "..", "instance"))
-
 
 class Config:
     """Base configuration for the Flask app."""
     SECRET_KEY = os.environ.get("SECRET_KEY", "please-change-me-in-production")
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    SQLALCHEMY_DATABASE_URI = os.environ.get(
-        "DATABASE_URL",
-        "sqlite:///" + os.path.join(instance_path, "app.sqlite")
-    )
+    SQLALCHEMY_DATABASE_URI = os.environ.get("DATABASE_URL")
     WELCOME_MESSAGE = "<p>legendary api</p>"
 
 
 class DevelopmentConfig(Config):
-    """Development configuration - uses SQLite locally."""
+    """Development configuration - uses MySQL via Docker."""
     ENV = "development"
     DEBUG = True
 
     SQLALCHEMY_DATABASE_URI = os.environ.get(
         "DATABASE_URL",
-        "sqlite:///" + os.path.join(instance_path, "dev.sqlite")
+        "mysql+pymysql://pokemon_user:pokemon_password@localhost:3306/legendary_pokemon_db"
     )
 
 
 class TestingConfig(Config):
-    """Testing configuration - uses in-memory SQLite."""
+    """Testing configuration - uses separate test database."""
     ENV = "testing"
     TESTING = True
     DEBUG = True
 
-    SQLALCHEMY_DATABASE_URI = "sqlite:///:memory:"
+    SQLALCHEMY_DATABASE_URI = os.environ.get(
+        "TEST_DATABASE_URL",
+        "mysql+pymysql://pokemon_user:pokemon_password@localhost:3306/legendary_pokemon_test"
+    )
 
 
 class ProductionConfig(Config):
