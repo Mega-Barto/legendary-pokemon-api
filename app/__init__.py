@@ -28,6 +28,7 @@ def create_app(config_object=None) -> Flask:
 
     @app.route("/")
     def index():
-        return app.config.get("WELCOME_MESSAGE", "legendary api")
+        from flask import send_from_directory
+        return send_from_directory(app.static_folder, 'index.html')
 
     return app
