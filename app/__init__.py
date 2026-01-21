@@ -3,7 +3,7 @@ from flask import Flask
 from .config import DevelopmentConfig, TestingConfig, ProductionConfig
 from .extensions import register_extensions
 from .api import register_api_blueprint
-
+from flask_cors import CORS
 
 def create_app(config_object=None) -> Flask:
     app = Flask(__name__, instance_relative_config=False)
@@ -24,6 +24,7 @@ def create_app(config_object=None) -> Flask:
 
     register_extensions(app)
     register_api_blueprint(app)
+    CORS(app)
 
     @app.route("/")
     def index():
