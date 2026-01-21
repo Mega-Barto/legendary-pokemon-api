@@ -51,50 +51,37 @@ def get_pokemon_by_name(name: str):
     return jsonify(serialize_pokemon(pokemon))
 
 
-@bp.route("/pokemon", methods=["POST"])
-@require_api_key
-def create_pokemon():
-    """
-    Create a new Pokémon.
-
-    Expected JSON:
-    {
-        "name": "Mewtwo",
-        "pokedex_number": 150,
-        "description": "A Pokemon created by genetic manipulation...",
-        "generation": 1,
-        "region_id": 1,
-        "type_ids": [14],  // Psychic
-        "mythical": {  // optional - only for mythical Pokemon
-            "classification_id": 1,
-            "event_exclusive": false
-        }
-    }
-    """
-    data = request.get_json()
-
+def create_single_pokemon(data):
+    """Helper to create a single Pokemon. Returns (pokemon, error)."""
     # Validate required fields
     required = ["name", "pokedex_number", "generation", "region_id", "type_ids"]
     missing = [f for f in required if f not in data]
     if missing:
-        return jsonify({"error": f"Missing required fields: {missing}"}), 400
+        return None, f"Missing required fields: {missing}"
 
-    # Validate max 2 types (like real Pokemon)
+    # Validate max 2 types
     if len(data["type_ids"]) > 2:
-        return jsonify({"error": "A Pokémon can have at most 2 types"}), 400
+        return None, "A Pokémon can have at most 2 types"
 
     if len(data["type_ids"]) < 1:
-        return jsonify({"error": "A Pokémon must have at least 1 type"}), 400
+        return None, "A Pokémon must have at least 1 type"
+
+    # Check if already exists
+    if Pokemon.query.filter_by(name=data["name"]).first():
+        return None, f"Pokemon \"{data['name']}\" already exists"
+
+    if Pokemon.query.filter_by(pokedex_number=data["pokedex_number"]).first():
+        return None, f"Pokemon with Pokedex #{data['pokedex_number']} already exists"
 
     # Verify region exists
     region = Region.query.get(data["region_id"])
     if not region:
-        return jsonify({"error": f"Region with id {data['region_id']} not found"}), 404
+        return None, f"Region with id {data['region_id']} not found"
 
     # Verify types exist
     types = Type.query.filter(Type.id.in_(data["type_ids"])).all()
     if len(types) != len(data["type_ids"]):
-        return jsonify({"error": "One or more type_ids not found"}), 404
+        return None, "One or more type_ids not found"
 
     # Create Pokemon
     pokemon = Pokemon(
@@ -107,7 +94,7 @@ def create_pokemon():
     pokemon.types = types
 
     db.session.add(pokemon)
-    db.session.flush()  # Get the ID before committing
+    db.session.flush()
 
     # Handle mythical info if provided
     if data.get("mythical"):
@@ -116,8 +103,7 @@ def create_pokemon():
             mythical_data["classification_id"]
         )
         if not classification:
-            db.session.rollback()
-            return jsonify({"error": "Mythical classification not found"}), 404
+            return None, "Mythical classification not found"
 
         mythical_info = MythicalPokemon(
             pokemon_id=pokemon.id,
@@ -126,8 +112,47 @@ def create_pokemon():
         )
         db.session.add(mythical_info)
 
-    db.session.commit()
+    return pokemon, None
 
+
+@bp.route("/pokemon", methods=["POST"])
+@require_api_key
+def create_pokemon():
+    """
+    Create one or multiple Pokémon.
+
+    Single: {"name": "Mewtwo", "pokedex_number": 150, ...}
+    Multiple: [{"name": "Mewtwo", ...}, {"name": "Mew", ...}]
+    """
+    data = request.get_json()
+
+    # Si es una lista, crear múltiples
+    if isinstance(data, list):
+        created = []
+        errors = []
+
+        for poke_data in data:
+            pokemon, error = create_single_pokemon(poke_data)
+            if error:
+                errors.append(f"{poke_data.get('name', 'unknown')}: {error}")
+            else:
+                created.append(poke_data["name"])
+
+        db.session.commit()
+
+        return jsonify({
+            "created": created,
+            "errors": errors,
+            "total_created": len(created)
+        }), 201
+
+    # Si es un objeto, crear uno solo
+    pokemon, error = create_single_pokemon(data)
+    if error:
+        db.session.rollback()
+        return jsonify({"error": error}), 400
+
+    db.session.commit()
     return jsonify(serialize_pokemon(pokemon)), 201
 
 

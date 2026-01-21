@@ -17,34 +17,46 @@ def get_types():
 @bp.route("/types", methods=["POST"])
 @require_api_key
 def create_type():
-    """Create a new Pokémon type."""
+    """Create one or multiple Pokémon types."""
     data = request.get_json()
 
+    # Si es una lista, crear múltiples
+    if isinstance(data, list):
+        created = []
+        errors = []
+
+        for item in data:
+            name = item.get("name") if isinstance(item, dict) else item
+
+            if not name:
+                errors.append("Missing name field")
+                continue
+
+            if Type.query.filter_by(name=name).first():
+                errors.append(f'Type "{name}" already exists')
+                continue
+
+            pokemon_type = Type(name=name)
+            db.session.add(pokemon_type)
+            created.append(name)
+
+        db.session.commit()
+
+        return jsonify({
+            "created": created,
+            "errors": errors,
+            "total_created": len(created)
+        }), 201
+
+    # Si es un objeto, crear uno solo
     if not data or not data.get("name"):
         return jsonify({"error": "name is required"}), 400
+
+    if Type.query.filter_by(name=data["name"]).first():
+        return jsonify({"error": "Type already exists"}), 409
 
     pokemon_type = Type(name=data["name"])
     db.session.add(pokemon_type)
     db.session.commit()
 
     return jsonify({"id": pokemon_type.id, "name": pokemon_type.name}), 201
-
-
-@bp.route("/types/bulk", methods=["POST"])
-@require_api_key
-def create_types_bulk():
-    """Create multiple types at once. Expects: {"names": ["Fire", "Water", ...]}"""
-    data = request.get_json()
-
-    if not data or not data.get("names"):
-        return jsonify({"error": "names array is required"}), 400
-
-    created = []
-    for name in data["names"]:
-        pokemon_type = Type(name=name)
-        db.session.add(pokemon_type)
-        created.append(pokemon_type)
-
-    db.session.commit()
-
-    return jsonify([{"id": t.id, "name": t.name} for t in created]), 201
