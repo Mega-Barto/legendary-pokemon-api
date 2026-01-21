@@ -115,7 +115,6 @@ class MythicalPokemon(db.Model):
     classification_id = db.Column(
         db.Integer, db.ForeignKey("mythical_classification.id"), nullable=False
     )
-    event_exclusive = db.Column(db.Boolean, default=False)
 
     # Relationships
     pokemon = db.relationship("Pokemon", back_populates="mythical_info")
