@@ -104,8 +104,7 @@ def create_single_pokemon(data):
 
         mythical_info = MythicalPokemon(
             pokemon_id=pokemon.id,
-            classification_id=mythical_data["classification_id"],
-            event_exclusive=mythical_data.get("event_exclusive", False),
+            classification_id=mythical_data["classification_id"]
         )
         db.session.add(mythical_info)
 
