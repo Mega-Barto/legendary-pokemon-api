@@ -66,7 +66,6 @@ class Pokemon(db.Model):
     name = db.Column(db.String(100), nullable=False, unique=True)
     pokedex_number = db.Column(db.Integer, nullable=False)
     description = db.Column(db.Text, nullable=True)
-    generation = db.Column(db.SmallInteger, nullable=False)
     region_id = db.Column(
         db.Integer, db.ForeignKey("region.id"), nullable=False
     )

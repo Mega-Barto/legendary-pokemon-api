@@ -15,13 +15,11 @@ def serialize_pokemon(p):
         "pokedex_number": p.pokedex_number,
         "image_url": p.image_url,
         "description": p.description,
-        "generation": p.generation,
         "region": {"id": p.region.id, "name": p.region.name},
         "types": [{"id": t.id, "name": t.name} for t in p.types],
         "mythical_info": (
             {
                 "classification": p.mythical_info.classification.name,
-                "event_exclusive": p.mythical_info.event_exclusive,
             }
             if p.mythical_info
             else None
@@ -54,7 +52,7 @@ def get_pokemon_by_name(name: str):
 def create_single_pokemon(data):
     """Helper to create a single Pokemon. Returns (pokemon, error)."""
     # Validate required fields
-    required = ["name", "pokedex_number", "generation", "region_id", "type_ids"]
+    required = ["name", "pokedex_number", "region_id", "type_ids"]
     missing = [f for f in required if f not in data]
     if missing:
         return None, f"Missing required fields: {missing}"
@@ -88,7 +86,6 @@ def create_single_pokemon(data):
         name=data["name"],
         pokedex_number=data["pokedex_number"],
         description=data.get("description"),
-        generation=data["generation"],
         region_id=data["region_id"],
     )
     pokemon.types = types
