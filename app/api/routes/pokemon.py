@@ -48,6 +48,13 @@ def get_pokemon_by_name(name: str):
     pokemon = Pokemon.query.filter_by(name=name).first_or_404()
     return jsonify(serialize_pokemon(pokemon))
 
+@bp.route("/pokemon/singular", methods=["GET"])
+def get_singular_pokemon():
+    """Get all Pokémon with classification_id=2 (singular)."""
+    singular_mythicals = MythicalPokemon.query.filter_by(classification_id=2).all()
+    pokemon_list = [serialize_pokemon(m.pokemon) for m in singular_mythicals if m.pokemon]
+    return jsonify(pokemon_list)
+
 
 def create_single_pokemon(data):
     """Helper to create a single Pokemon. Returns (pokemon, error)."""
