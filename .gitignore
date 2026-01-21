@@ -8,3 +8,14 @@ wheels/
 
 # Virtual environments
 .venv
+.env
+
+# Database
+instance/
+*.sqlite
+
+# Migrations
+migrations/
+
+seed.py
+

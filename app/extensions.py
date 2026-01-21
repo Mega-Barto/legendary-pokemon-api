@@ -10,3 +10,4 @@ def register_extensions(app):
     """Initialize Flask extensions with the app."""
     db.init_app(app)
     migrate.init_app(app, db)
+    from . import models  # noqa: F401
