@@ -35,10 +35,10 @@ def get_all_pokemon():
     return jsonify([serialize_pokemon(p) for p in pokemon_list])
 
 
-@bp.route("/pokemon/<int:pokemon_id>", methods=["GET"])
-def get_pokemon_by_id(pokemon_id: int):
-    """Get a Pokémon by ID."""
-    pokemon = Pokemon.query.get_or_404(pokemon_id)
+@bp.route("/pokemon/<int:pokedex_number>", methods=["GET"])
+def get_pokemon_by_pokedex_number(pokedex_number: int):
+    """Get a Pokémon by Pokedex number."""
+    pokemon = Pokemon.query.filter_by(pokedex_number=pokedex_number).first_or_404()
     return jsonify(serialize_pokemon(pokemon))
 
 
