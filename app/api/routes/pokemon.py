@@ -32,7 +32,7 @@ def serialize_pokemon(p):
 def get_all_pokemon():
     """Get all Pokémon."""
     page = request.args.get('page', 1, type=int)
-    per_page = 5
+    per_page = 20
     pokemon_list = Pokemon.query.order_by(Pokemon.pokedex_number.asc()).paginate(page=page, per_page=per_page, error_out=False).items
     return jsonify([serialize_pokemon(p) for p in pokemon_list])
 
@@ -50,17 +50,34 @@ def get_pokemon_by_name(name: str):
     pokemon = Pokemon.query.filter_by(name=name).first_or_404()
     return jsonify(serialize_pokemon(pokemon))
 
+@bp.route("/pokemon/type/<string:type_name>", methods=["GET"])
+def get_pokemon_by_type(type_name: str):
+    """Get all Pokémon by type name."""
+    type_obj = Type.query.filter_by(name=type_name).first_or_404()
+    pokemon_list = (
+        Pokemon.query
+        .join(Pokemon.types)
+        .filter(Type.id == type_obj.id)
+        .order_by(Pokemon.pokedex_number.asc())
+        .all()
+    )
+    return jsonify([serialize_pokemon(p) for p in pokemon_list])
+
 @bp.route("/pokemon/legendary", methods=["GET"])
 def get_legendary_pokemon():
     """Get all Pokémon with classification_id=1 (legendary)."""
-    legendary_mythicals = MythicalPokemon.query.filter_by(classification_id=1).all()
+    page = request.args.get('page', 1, type=int)
+    per_page = 20
+    legendary_mythicals = MythicalPokemon.query.filter_by(classification_id=1).paginate(page=page, per_page=per_page, error_out=False).items
     pokemon_list = [serialize_pokemon(m.pokemon) for m in legendary_mythicals if m.pokemon]
     return jsonify(pokemon_list)
 
 @bp.route("/pokemon/singular", methods=["GET"])
 def get_singular_pokemon():
     """Get all Pokémon with classification_id=2 (singular)."""
-    singular_mythicals = MythicalPokemon.query.filter_by(classification_id=2).all()
+    page = request.args.get('page', 1, type=int)
+    per_page = 20
+    singular_mythicals = MythicalPokemon.query.filter_by(classification_id=2).paginate(page=page, per_page=per_page, error_out=False).items
     pokemon_list = [serialize_pokemon(m.pokemon) for m in singular_mythicals if m.pokemon]
     return jsonify(pokemon_list)
 
